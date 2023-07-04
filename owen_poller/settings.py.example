@@ -1,0 +1,18 @@
+from typing import Any
+
+serial_settings: dict[str, Any] = {
+    'port': 'com3',
+    'baudrate': 9600,
+    'bytesize': 8,
+    'parity': 'N',
+    'stopbits': 1
+}
+
+devices: dict[str, dict[str, Any]] = {
+    'dev1': {
+        'address': 1,
+        'address_len': 8,
+    },
+}
+
+POLL_DELAY = 0.1
