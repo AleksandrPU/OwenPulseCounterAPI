@@ -26,7 +26,10 @@ class PacketDecodeError(Exception):
 
 class PacketLenError(Exception):
     def __init__(self, packet):
-        super().__init__(self, 'Недопустимая длина пакета')
+        super().__init__(
+            self,
+            f'Недопустимая длина пакета {packet} :({len(packet)})'
+        )
 
 
 class BCDValueError(Exception):

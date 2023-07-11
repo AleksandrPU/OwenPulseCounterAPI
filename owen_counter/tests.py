@@ -302,16 +302,16 @@ class TestDataConverters(unittest.TestCase):
         """Тестируем преобразование валидных данных."""
         Fixture = namedtuple('Fixture', ['data', 'expected_value'])
         fixtures = [
-            Fixture(data=b'\x00\x00\x00\x00\x00\x00',
+            Fixture(data=b'\x00\x00\x00\x00\x00\x00\x40',
                     expected_value=timedelta()),
-            Fixture(data=b'\x00\x00\x01\x00\x00\x00',
+            Fixture(data=b'\x00\x00\x01\x00\x00\x00\x40',
                     expected_value=timedelta(hours=1)),
-            Fixture(data=b'\x00\x00\x10\x02\x03\x05',
+            Fixture(data=b'\x00\x00\x10\x02\x03\x05\x40',
                     expected_value=timedelta(hours=10,
                                              minutes=2,
                                              seconds=3,
                                              milliseconds=50)),
-            Fixture(data=b'\x12\x34\x56\x32\x48\x57',
+            Fixture(data=b'\x12\x34\x56\x32\x48\x57\x40',
                     expected_value=timedelta(hours=123456,
                                              minutes=32,
                                              seconds=48,

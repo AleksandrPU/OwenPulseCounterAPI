@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Union
+from typing import Any, Union
 
 from serial import Serial
 
@@ -10,7 +10,7 @@ from owen_counter.exeptions import (ImproperlyConfiguredError,
 
 
 class DataConverters:
-    __CLK_DATA_LEN = 6
+    __CLK_DATA_LEN = 7
     __CLK_HOURS_BYTES = slice(0, 3)
     __CLK_MINUTES_BYTES = slice(3, 4)
     __CLK_SECONDS_BYTES = slice(4, 5)
@@ -19,7 +19,7 @@ class DataConverters:
     @staticmethod
     def bcd_to_int(data: Union[bytes, bytearray]) -> int:
         """
-        Конвертирует DEC_dot0 (BCD) значение в int.
+        Конвертирует DEC_dot0 (BCD) в int.
         """
         if len(data) == 0:
             raise BCDValueError(data=data)
@@ -29,8 +29,8 @@ class DataConverters:
             h_nibble = byte >> 4
             if l_nibble > 9 or h_nibble > 9:
                 raise BCDValueError(data=data)
-            result += (byte & 0xF) * 10 ** (i * 2)
-            result += (byte >> 4) * 10 ** (i * 2 + 1)
+            result += l_nibble * 10 ** (i * 2)
+            result += h_nibble * 10 ** (i * 2 + 1)
         return result
 
     @classmethod
@@ -39,12 +39,16 @@ class DataConverters:
         Конвертирует CLK_frm в timedelta.
         """
         if len(data) != cls.__CLK_DATA_LEN:
-            raise TimeValueError
+            raise TimeValueError(data=data)
         hours = cls.bcd_to_int(data[cls.__CLK_HOURS_BYTES])
         minutes = cls.bcd_to_int(data[cls.__CLK_MINUTES_BYTES])
         seconds = cls.bcd_to_int(data[cls.__CLK_SECONDS_BYTES])
-        milliseconds = (cls.bcd_to_int(data[cls.__CLK_HUNDREDTHS_SECOND_BYTES])
-                        * 10)
+        milliseconds = (
+                cls.bcd_to_int(
+                    data[cls.__CLK_HUNDREDTHS_SECOND_BYTES]
+                )
+                * 10
+        )
         return timedelta(hours=hours,
                          minutes=minutes,
                          seconds=seconds,
@@ -56,6 +60,21 @@ class OwenCI8:
     DCNT: bytes = b'\xC1\x73'  # hash параметра DCNT
     DSPD: bytes = b'\x8F\xC2'  # hash параметра DSPD
     DTMR: bytes = b'\xE6\x9C'  # hash параметра DTMR
+
+    PARAMS: dict[bytes, dict[str, Any]] = {
+        DCNT: {
+            'response_len': 22,
+            'converter': DataConverters.bcd_to_int
+        },
+        DSPD: {
+            'response_len': 22,
+            'converter': DataConverters.bcd_to_int
+        },
+        DTMR: {
+            'response_len': 28,
+            'converter': DataConverters.clk_to_timedelta
+        },
+    }
 
     # Параметры протокола Owen
     __OWEN_ASCII_LOWEST_CODE: int = 0x47  # ASCII код для тетрады 0x0
@@ -113,12 +132,6 @@ class OwenCI8:
             )
         addr <<= (16 - addr_len)
         self.addr = addr.to_bytes(2, 'big')
-
-        # self.PARAM_CONVERTERS = {
-        #     self.DCNT: self.bcd_to_int,
-        #     self.DSPD: self.bcd_to_int,
-        #     self.DTMR: self.clk_to_timedelta,
-        # }
 
     @staticmethod
     def calc_owen_crc(data: bytes) -> bytes:
@@ -263,16 +276,18 @@ class OwenCI8:
         :param parameter_hash: Hash параметра счетчика.
         :return: Значение параметра.
         """
-        if parameter_hash not in (self.DCNT, self.DTMR, self.DSPD):
+        if parameter_hash not in (self.DCNT, self.DSPD, self.DTMR):
             raise ValueError(self.__HASH_ERR_MSG.format(actual=parameter_hash))
-        bin_packet = self.get_command_packet(parameter_hash)
-        ascii_packet = self.bin_to_ascii(bin_packet)
-        serial_if.write(ascii_packet)
-        ascii_packet = serial_if.read(35)
-        # print(ascii_packet)
-        b = self.ascii_to_bin(ascii_packet)
-        # b = self.PARAM_CONVERTERS[parameter_hash](b)
-        try:
-            return self.check_bin_packet(b, parameter_hash)
-        except PacketDecodeError as err:
-            raise PacketDecodeError(packet=ascii_packet, msg=err.args[0])
+        serial_if.write(
+            self.bin_to_ascii(
+                self.get_command_packet(parameter_hash)
+            )
+        )
+        response_expected_len = self.PARAMS[parameter_hash]['response_len']
+        ascii_response = serial_if.read(response_expected_len)
+        if len(ascii_response) != response_expected_len:
+            raise PacketLenError(packet=ascii_response)
+        data = self.check_bin_packet(self.ascii_to_bin(ascii_response),
+                                     parameter_hash)
+
+        return self.PARAMS[parameter_hash]['converter'](data=data)
