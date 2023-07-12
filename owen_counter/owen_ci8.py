@@ -269,7 +269,7 @@ class OwenCI8:
         except IndexError:
             raise PacketLenError(packet=data)
 
-    def read_counter_parameter(self, serial_if: Serial, parameter_hash: bytes):
+    def read_parameter(self, serial_if: Serial, parameter_hash: bytes):
         """
         Считывает параметр счетчика импульсов.
         :param serial_if: Порт.

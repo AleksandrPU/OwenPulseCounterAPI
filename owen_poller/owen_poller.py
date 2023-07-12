@@ -1,9 +1,11 @@
 import asyncio
+from typing import Any
 
 from serial import Serial
 
 from owen_counter.owen_ci8 import OwenCI8
 from . import settings
+from .exeptions import DeviceNotFound
 
 
 class CountersPoller:
@@ -13,26 +15,35 @@ class CountersPoller:
         self.serial_interface = Serial(**settings.serial_settings)
         self.serial_interface.close()
         self.serial_interface.open()
-        self.devices = {}
-        for device_name, device_settings in settings.devices.items():
-            self.devices[device_name] = OwenCI8(**device_settings)
+        self.devices: dict[str, OwenCI8] = {}
+        self.devices_params: dict[str, dict[bytes, Any]] = {}
+        for device_settings in settings.device_settings:
+            device_name = device_settings['name']
+            self.devices[device_name] = OwenCI8(
+                addr=device_settings['addr'],
+                addr_len=device_settings['addr_len']
+            )
+            self.devices_params[device_name] = dict.fromkeys(
+                device_settings['params'])
 
     async def poll(self):
+        """
+        Цикл опроса устройств.
+        """
         while True:
-            for device in self.devices.values():
-                try:
-                    value = device.read_counter_parameter(
-                        self.serial_interface, OwenCI8.DTMR)
-                    print(value)
-                    # await asyncio.sleep(0.79)
-                    # await asyncio.sleep(0.1)
-                except Exception as err:
-                    print(err)
-                    await asyncio.sleep(1)
+            for device_name, device in self.devices.items():
+                params = self.devices_params[device_name]
+                for param in params:
+                    try:
+                        params[param] = device.read_parameter(
+                            self.serial_interface, param)
+                    except Exception as err:
+                        print(err)
+                        await asyncio.sleep(0.5)
+                await asyncio.sleep(1)
 
-    async def test_poll(self):
-        i = 0
-        while True:
-            print(i)
-            i += 1
-            await asyncio.sleep(1)
+    def get_params(self, device_name: str) -> dict:
+        try:
+            return self.devices_params[device_name]
+        except KeyError:
+            raise DeviceNotFound(device_name)

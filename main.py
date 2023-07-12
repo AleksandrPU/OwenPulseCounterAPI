@@ -1,11 +1,19 @@
 import asyncio
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 
+from owen_counter.owen_ci8 import OwenCI8
+from owen_poller.exeptions import DeviceNotFound
 from owen_poller.owen_poller import CountersPoller
 
 app = FastAPI()
 poller = CountersPoller()
+
+param_names = {
+    OwenCI8.DCNT: 'count',
+    OwenCI8.DTMR: 'seconds',
+    OwenCI8.DSPD: 'flow'
+}
 
 
 @app.on_event('startup')
@@ -19,6 +27,11 @@ async def root():
 
 
 @app.get("/counters/{name}")
-async def say_hello(name: str):
-    # return {"message": owen_counter.read(name)}
-    pass
+async def get_counter_values(name: str, response: Response):
+    try:
+        device_attrs = poller.get_params(name)
+    except DeviceNotFound:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return None
+    params = {param_names[param]: value for param, value in device_attrs.items()}
+    return params
