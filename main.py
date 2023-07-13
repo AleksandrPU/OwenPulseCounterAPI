@@ -1,12 +1,22 @@
 import asyncio
 
 from fastapi import FastAPI, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from owen_counter.owen_ci8 import OwenCI8
 from owen_poller.exeptions import DeviceNotFound
 from owen_poller.owen_poller import CountersPoller
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
 poller = CountersPoller()
 
 param_names = {
