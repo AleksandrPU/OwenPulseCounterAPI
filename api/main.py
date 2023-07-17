@@ -43,5 +43,4 @@ async def get_counter_values(name: str, response: Response):
     except DeviceNotFound:
         response.status_code = status.HTTP_404_NOT_FOUND
         return None
-    params = {param_names[param]: value for param, value in device_attrs.items()}
-    return params
+    return {param_names[param]: value for param, value in device_attrs.items()}

@@ -1,18 +1,23 @@
 from typing import Any
 
+from owen_counter.owen_ci8 import OwenCI8
+
 serial_settings: dict[str, Any] = {
     'port': 'com3',
     'baudrate': 9600,
     'bytesize': 8,
     'parity': 'N',
-    'stopbits': 1
+    'stopbits': 1,
+    'timeout': 0.1
 }
 
-devices: dict[str, dict[str, Any]] = {
-    'dev1': {
-        'address': 1,
-        'address_len': 8,
-    },
-}
+device_settings: list[dict[str, Any]] = [
+    {
+        'name': 'dev1',
+        'addr': 1,
+        'addr_len': 8,
+        'params': [OwenCI8.DCNT, OwenCI8.DTMR],
+    }
+]
 
 POLL_DELAY = 0.1

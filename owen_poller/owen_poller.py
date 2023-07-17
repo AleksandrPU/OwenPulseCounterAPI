@@ -4,6 +4,7 @@ from typing import Any
 from serial import Serial
 
 from owen_counter.owen_ci8 import OwenCI8
+
 from . import settings
 from .exeptions import DeviceNotFound
 

@@ -3,10 +3,10 @@ from typing import Any, Union
 
 from serial import Serial
 
-from owen_counter.exeptions import (ImproperlyConfiguredError,
-                                    PacketHeaderError, PacketFooterError,
-                                    PacketDecodeError, PacketLenError,
-                                    TimeValueError, BCDValueError)
+from owen_counter.exeptions import (BCDValueError, ImproperlyConfiguredError,
+                                    PacketDecodeError, PacketFooterError,
+                                    PacketHeaderError, PacketLenError,
+                                    TimeValueError)
 
 
 class DataConverters:
@@ -44,10 +44,8 @@ class DataConverters:
         minutes = cls.bcd_to_int(data[cls.__CLK_MINUTES_BYTES])
         seconds = cls.bcd_to_int(data[cls.__CLK_SECONDS_BYTES])
         milliseconds = (
-                cls.bcd_to_int(
-                    data[cls.__CLK_HUNDREDTHS_SECOND_BYTES]
-                )
-                * 10
+            cls.bcd_to_int(data[cls.__CLK_HUNDREDTHS_SECOND_BYTES])
+            * 10
         )
         return timedelta(hours=hours,
                          minutes=minutes,
@@ -208,10 +206,9 @@ class OwenCI8:
                 if (not (self.__OWEN_ASCII_LOWEST_CODE
                          <= l_nibble
                          <= self.__OWEN_ASCII_HIGHEST_CODE)
-                        or
-                        not (self.__OWEN_ASCII_LOWEST_CODE
-                             <= h_nibble
-                             <= self.__OWEN_ASCII_HIGHEST_CODE)):
+                        or not (self.__OWEN_ASCII_LOWEST_CODE
+                                <= h_nibble
+                                <= self.__OWEN_ASCII_HIGHEST_CODE)):
                     raise PacketDecodeError(
                         packet=data,
                         msg='Пакет содержит недопустимый символ'

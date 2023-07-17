@@ -1,10 +1,11 @@
-from collections import namedtuple
 import unittest
+from collections import namedtuple
 from datetime import timedelta
 
+from .exeptions import (BCDValueError, ImproperlyConfiguredError,
+                        PacketDecodeError, PacketFooterError,
+                        PacketHeaderError)
 from .owen_ci8 import DataConverters, OwenCI8
-from .exeptions import (ImproperlyConfiguredError, PacketHeaderError,
-                        PacketFooterError, PacketDecodeError, BCDValueError)
 
 
 class TestOwenCounter(unittest.TestCase):
