@@ -49,6 +49,6 @@ async def get_counter_values(name: str, response: Response):
 @app.get("/counters")
 async def get_all_devices():
     return {
-        dev: {param_names[p]: v for p, v in params.items()}
+        dev: {param_names[param]: value for param, value in params.items()}
         for dev, params in poller.get_all().items()
     }
