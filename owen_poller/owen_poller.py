@@ -43,8 +43,12 @@ class CountersPoller:
                         await asyncio.sleep(0.5)
                 await asyncio.sleep(1)
 
-    def get_params(self, device_name: str) -> dict:
+    def get_device_params(self, device_name: str) -> dict:
         try:
             return self.devices_params[device_name]
         except KeyError:
             raise DeviceNotFound(device_name)
+
+    def get_all(self) -> dict:
+        return self.devices_params
+

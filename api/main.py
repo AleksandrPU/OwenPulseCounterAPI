@@ -39,8 +39,16 @@ async def root():
 @app.get("/counters/{name}")
 async def get_counter_values(name: str, response: Response):
     try:
-        device_attrs = poller.get_params(name)
+        device_params = poller.get_device_params(name)
     except DeviceNotFound:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {'detail': 'Not Found'}
-    return {param_names[param]: value for param, value in device_attrs.items()}
+    return {param_names[param]: value for param, value in device_params.items()}
+
+
+@app.get("/counters")
+async def get_all_devices():
+    return {
+        dev: {param_names[p]: v for p, v in params.items()}
+        for dev, params in poller.get_all().items()
+    }
