@@ -34,7 +34,7 @@ class PcsPerMinSender:
                 for_sent.append(
                     {
                         'sensor': sensor.name,
-                        'value': speed,
+                        'value': int(speed),
                         # 'measured_at': current_reading.time.
                     }
                 )
@@ -44,4 +44,5 @@ class PcsPerMinSender:
                 headers={'Authorization': 'Token 395fb60d881adae2a1ec69f974da6958d44fb47b'},
                 json=for_sent
             )
+            print(response.json())
             await asyncio.sleep(30)
