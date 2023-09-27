@@ -40,8 +40,8 @@ class PcsPerMinSender:
                 )
                 self.last_readings[sensor.name] = copy.copy(current_reading)
             response = requests.post(
-                url='http://127.0.0.1:8000/api/v1/create_readings/',
-                headers={'Authorization': 'Token 90386e054c5c229d4cbcfde73cfc81e6304f4e51'},
+                url='http://192.168.0.50/api/v1/create_readings/',
+                headers={'Authorization': 'Token 395fb60d881adae2a1ec69f974da6958d44fb47b'},
                 json=for_sent
             )
             await asyncio.sleep(30)
