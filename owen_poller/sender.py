@@ -49,6 +49,7 @@ class PcsPerMinSender:
                     json=for_sent
                 )
                 print(response.json())
-            except (RequestException, JSONDecodeError):
-                pass
+            except (RequestException, JSONDecodeError) as err:
+                print('Ошибка отправки')
+                print(err)
             await asyncio.sleep(30)
