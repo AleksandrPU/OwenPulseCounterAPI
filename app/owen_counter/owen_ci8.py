@@ -3,10 +3,10 @@ from typing import Any, Union
 
 from serial import Serial
 
-from owen_counter.exeptions import (BCDValueError, ImproperlyConfiguredError,
-                                    PacketDecodeError, PacketFooterError,
-                                    PacketHeaderError, PacketLenError,
-                                    TimeValueError)
+from app.owen_counter.exeptions import (BCDValueError, ImproperlyConfiguredError,
+                                        PacketDecodeError, PacketFooterError,
+                                        PacketHeaderError, PacketLenError,
+                                        TimeValueError)
 
 
 class DataConverters:

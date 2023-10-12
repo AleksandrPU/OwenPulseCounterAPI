@@ -4,10 +4,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from fastapi import BackgroundTasks
 from serial import Serial
 
-from owen_counter.owen_ci8 import OwenCI8
+from app.owen_counter.owen_ci8 import OwenCI8
 
 from . import settings
 from .exeptions import DeviceNotFound

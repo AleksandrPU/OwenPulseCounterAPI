@@ -3,7 +3,7 @@ import copy
 import requests
 from requests import JSONDecodeError, RequestException
 
-from owen_poller.owen_poller import SensorReading
+from app.owen_poller.owen_poller import SensorReading
 
 
 class PcsPerMinSender:

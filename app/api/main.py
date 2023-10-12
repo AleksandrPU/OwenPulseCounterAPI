@@ -4,9 +4,9 @@ from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from owen_poller.exeptions import DeviceNotFound
-from owen_poller.owen_poller import SensorsPoller
-from owen_poller.sender import PcsPerMinSender
+from app.owen_poller.exeptions import DeviceNotFound
+from app.owen_poller.owen_poller import SensorsPoller
+from app.owen_poller.sender import PcsPerMinSender
 
 app = FastAPI()
 
