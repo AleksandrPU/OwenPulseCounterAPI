@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import requests
+from requests import RequestException
 
 from owen_poller.owen_poller import SensorReading
 
@@ -37,12 +38,15 @@ class PcsPerMinSender:
                     }
                 )
                 self.last_readings[sensor.name] = copy.copy(current_reading)
-            response = requests.post(
-                url='http://192.168.0.50/api/v1/create_readings/',
-                # url='http://127.0.0.1:8000/api/v1/create_readings/',
-                headers={'Authorization': 'Token 395fb60d881adae2a1ec69f974da6958d44fb47b'},
-                # headers={'Authorization': 'Token 90386e054c5c229d4cbcfde73cfc81e6304f4e51'},
-                json=for_sent
-            )
-            # print(response.json())
+            try:
+                response = requests.post(
+                    url='http://phyhub.polipak.local/api/v1/create_readings/',
+                    # url='http://127.0.0.1:8000/api/v1/create_readings/',
+                    headers={'Authorization': 'Token e441b27fb5a4a83e80e29d958fdf08f9b919448d'},
+                    # headers={'Authorization': 'Token 90386e054c5c229d4cbcfde73cfc81e6304f4e51'},
+                    json=for_sent
+                )
+                # print(response.json())
+            except RequestException:
+                pass
             await asyncio.sleep(30)
