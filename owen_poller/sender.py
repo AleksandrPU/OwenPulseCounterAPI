@@ -39,6 +39,8 @@ class PcsPerMinSender:
                 )
                 self.last_readings[sensor.name] = copy.copy(current_reading)
             try:
+                print('Отправка данных в PhyHub..')
+                print(for_sent)
                 response = requests.post(
                     url='http://phyhub.polipak.local/api/v1/create_readings/',
                     # url='http://127.0.0.1:8000/api/v1/create_readings/',
