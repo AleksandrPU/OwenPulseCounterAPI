@@ -1,8 +1,8 @@
 FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-WORKDIR /app
-COPY requirements.txt /app/
-RUN pip install -r requirements.txt --no-cache-dir
-COPY . /app
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "80"]
+WORKDIR /code
+COPY ./requirements.txt /code/
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY . /code/app
+CMD ["uvicorn", "app.api.main:application", "--host", "0.0.0.0", "--port", "80"]

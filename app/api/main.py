@@ -8,9 +8,9 @@ from app.owen_poller.exeptions import DeviceNotFound
 from app.owen_poller.owen_poller import SensorsPoller
 from app.owen_poller.sender import PcsPerMinSender
 
-app = FastAPI()
+application = FastAPI()
 
-app.add_middleware(
+application.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -22,18 +22,18 @@ poller = SensorsPoller()
 readings_sender = PcsPerMinSender(poller)
 
 
-@app.on_event('startup')
+@application.on_event('startup')
 async def app_startup():
     asyncio.create_task(poller.poll())
     asyncio.create_task(readings_sender.send_readings())
 
 
-@app.get("/")
+@application.get("/")
 async def root():
     return {"message": "Owen Pulse Counter API"}
 
 
-@app.get("/sensors/{name}")
+@application.get("/sensors/{name}")
 async def get_sensor_readings(name: str):
     try:
         return poller.get_sensor_readings(name)

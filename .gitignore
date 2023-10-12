@@ -1,5 +1,6 @@
 # Project
-app/owen_poller/settings.py
+app/settings.py
+infra/settings.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

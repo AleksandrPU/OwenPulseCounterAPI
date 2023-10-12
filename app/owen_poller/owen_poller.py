@@ -8,7 +8,7 @@ from serial import Serial
 
 from app.owen_counter.owen_ci8 import OwenCI8
 
-from . import settings
+import settings
 from .exeptions import DeviceNotFound
 
 
