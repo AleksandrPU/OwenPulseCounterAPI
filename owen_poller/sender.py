@@ -1,7 +1,7 @@
 import asyncio
 import copy
 import requests
-from requests import RequestException
+from requests import JSONDecodeError, RequestException
 
 from owen_poller.owen_poller import SensorReading
 
@@ -46,7 +46,7 @@ class PcsPerMinSender:
                     # headers={'Authorization': 'Token 90386e054c5c229d4cbcfde73cfc81e6304f4e51'},
                     json=for_sent
                 )
-                # print(response.json())
-            except RequestException:
+                print(response.json())
+            except (RequestException, JSONDecodeError):
                 pass
             await asyncio.sleep(30)
