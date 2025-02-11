@@ -1,13 +1,18 @@
 import asyncio
+import logging
+from datetime import datetime
 
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.config import settings
 from app.owen_poller.exeptions import DeviceNotFound
 from app.owen_poller.owen_poller import SensorsPoller
 from app.owen_poller.sender import PcsPerMinSender
+from app.owen_poller.test_sender import TestPcsPerMinSender
 
+logger = logging.getLogger(__name__)
 application = FastAPI()
 
 application.add_middleware(
@@ -19,13 +24,18 @@ application.add_middleware(
 )
 
 poller = SensorsPoller()
-readings_sender = PcsPerMinSender(poller)
+if settings.poller_active:
+    if settings.test_poller:
+        readings_sender = TestPcsPerMinSender(poller)
+    else:
+        readings_sender = PcsPerMinSender(poller)
 
 
 @application.on_event('startup')
 async def app_startup():
     asyncio.create_task(poller.poll())
-    asyncio.create_task(readings_sender.send_readings())
+    if settings.poller_active:
+        asyncio.create_task(readings_sender.send_readings())
 
 
 @application.get("/")
@@ -33,9 +43,33 @@ async def root():
     return {"message": "Owen Pulse Counter API"}
 
 
+@application.get("/sensors/")
+async def get_some_sensor_readings(work_centers: str):
+    work_centers = work_centers.split(',')
+    logger.info(f"Getting readings for {work_centers}")
+    response = []
+    for work_center in work_centers:
+        try:
+            reading = poller.get_sensor_readings(work_center)
+            # reading['status'] = 'OK'
+            response.append(reading)
+        except DeviceNotFound as err:
+            # response.append({'name': work_center, 'status': 'Not Found'})
+            response.append(
+                {
+                    'name': work_center,
+                    'reading': None,
+                    'reading_time': datetime.now(),
+                }
+            )
+    logger.info(f"{response=}")
+    return response
+
+
 @application.get("/sensors/{name}")
 async def get_sensor_readings(name: str):
     try:
+        logger.info(f"Getting readings for {name}")
         return poller.get_sensor_readings(name)
     except DeviceNotFound as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

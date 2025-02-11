@@ -1,50 +1,44 @@
 import asyncio
-import copy
 import logging
-
+import random
 import requests
 from requests import JSONDecodeError, RequestException
 
-from app.api.config import configure_logging, settings
-from app.owen_poller.owen_poller import SensorReading
+from app.api.config import settings, configure_logging
 
 configure_logging(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class PcsPerMinSender:
+class TestPcsPerMinSender:
 
     def __init__(self, poller):
         self.poller = poller
         self.last_readings = {}
 
     async def send_readings(self):
+        test_status = {
+            'stop': [0 for _ in range(2 * 2)],
+            'work': [random.randint(150, 200) for _ in range(2 * 2)],
+            'offline': [None for _ in range(2 * 2)]
+        }
+        index = 0
+        data = test_status[random.choice(list(test_status.keys()))]
         while True:
             for_sent = []
-            for sensor in self.poller.sensors.values():
-                current_reading: SensorReading = sensor.reading
-                if current_reading.value is None:
-                    continue
-                previous_reading: SensorReading = self.last_readings.get(
-                    sensor.name)
-                if previous_reading is None or previous_reading.value is None:
-                    self.last_readings[sensor.name] = copy.copy(current_reading)
-                    continue
-                duration = current_reading.time - previous_reading.time
-                if duration.total_seconds() <= 0:
-                    continue
-                speed = ((current_reading.value - previous_reading.value)
-                         / duration.total_seconds()
-                         * 60)
+            if data[index] is not None:
                 for_sent.append(
                     {
-                        'sensor': sensor.name,
-                        'value': speed,
+                        'sensor': 'test01',
+                        'value': data[index],
                         # 'measured_at': current_reading.time.
                     }
                 )
-                self.last_readings[sensor.name] = copy.copy(current_reading)
             logger.debug(f'{for_sent=}')
+            index += 1
+            if index == len(data):
+                data = test_status[random.choice(list(test_status.keys()))]
+                index = 0
             if for_sent:
                 try:
                     logger.info('Отправка данных в PhyHub..')
