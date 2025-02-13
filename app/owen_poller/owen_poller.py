@@ -48,6 +48,37 @@ class Sensor:
             'reading_time': self.reading.time
         }
 
+@dataclass
+class TestSensor:
+    name: str
+    device: TestCounter
+    parameter_hash: bytes
+    serial: Serial
+    reading: SensorReading = dataclasses.field(default_factory=SensorReading)
+    # reading_time: datetime = datetime.now()
+
+    def update(self) -> None:
+        # try:
+        #     self.reading.value = self.device.read_parameter(
+        #         self.serial, self.parameter_hash)
+        #     self.reading.time = datetime.now()
+        # except Exception as err:
+        #     logger.error(f'Сенсор {self.name} {err}')
+        pass
+
+    def get(self) -> dict[str, Any]:
+        # return {
+        #     'name': self.name,
+        #     'reading': self.reading.value,
+        #     'reading_time': self.reading.time
+        # }
+        return {
+            'name': self.name,
+            'reading': self.device.read_parameter(
+                self.serial, self.parameter_hash),
+            'reading_time': datetime.now(),
+        }
+
 
 class SensorsPoller:
 
@@ -62,10 +93,12 @@ class SensorsPoller:
         for sensor_settings in settings.sensors_settings:
             sensor_name = sensor_settings['name']
             if sensor_settings['addr'] == 0:
+                type_sensor = TestSensor
                 device = TestCounter
             else:
+                type_sensor = Sensor
                 device = OwenCI8
-            self.sensors[sensor_name] = Sensor(
+            self.sensors[sensor_name] = type_sensor(
                 name=sensor_name,
                 # device=OwenCI8(addr=sensor_settings['addr'],
                 #                addr_len=sensor_settings['addr_len']),

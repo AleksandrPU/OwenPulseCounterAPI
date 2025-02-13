@@ -62,6 +62,10 @@ class TestCounter:
         'Неверный CRC в ответном пакете: {actual}. Ожидалось: {expected}')
     __ZERO_DATA_LEN_ERR_MSG = 'В ответном пакете нет данных.'
 
+    __current_status = None
+    __values = None
+    __index = 0
+
     def __init__(self, addr: int, addr_len: int = 8):
         """
         :param addr: адрес счетчика СИ8,
@@ -81,6 +85,13 @@ class TestCounter:
                 self.__ADDR_ERR_MSG.format(actual=addr, max_addr=0)
             )
         self.addr = addr
+
+        work = [random.randint(150, 200) for _ in range(2 * random.randint(9, 10))]
+        part_work = [random.randint(10, 100) for _ in range(2 * random.randint(5, 7))]
+        stop = [random.randint(0, 9) for _ in range(2 * random.randint(2, 8))]
+        offline = [None for _ in range(2 * random.randint(9, 12))]
+        self.__values = offline + stop + part_work + work + part_work + work + stop + work + stop + offline
+        self.__index = 0
 
     # @staticmethod
     # def calc_owen_crc(data: bytes) -> bytes:
@@ -239,5 +250,32 @@ class TestCounter:
         #                              parameter_hash)
         #
         # return self.PARAMS[parameter_hash]['converter'](data=data)
-        values = [None, random.randint(50, 200), 0, random.randint(50, 200), random.randint(1, 49)]
-        return random.choice(values)
+
+        # work = [random.randint(10, 200) for _ in range(2 * random.randint(1, 6))]
+        # stop = [random.randint(0, 9) for _ in range(2 * random.randint(1, 8))]
+        # offline = [None for _ in range(2 * random.randint(1, 6))]
+        # statuses = {
+        #     'work': work,
+        #     'stop': stop,
+        #     'offline': offline
+        # }
+        # if self.__current_status:
+        #     # print(f'not None {self.__current_status=}')
+        #     status = self.__current_status
+        #     self.__current_status = None
+        #     value = random.choice(statuses[status])
+        #     # print(f'{value=}')
+        #     return value
+        # # print('------------------------')
+        # # print(f'{self.__current_status=}')
+        # self.__current_status = random.choice(list(statuses.keys()))
+        # # print(f'{self.__current_status=}')
+        # value = random.choice(statuses[self.__current_status])
+        # # print(f'{value=}')
+        # return value
+
+        value = self.__values[self.__index]
+        self.__index += 1
+        if self.__index >= len(self.__values):
+            self.__index = 0
+        return value

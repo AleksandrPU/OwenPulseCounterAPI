@@ -51,17 +51,16 @@ async def get_some_sensor_readings(work_centers: str):
     for work_center in work_centers:
         try:
             reading = poller.get_sensor_readings(work_center)
-            # reading['status'] = 'OK'
-            response.append(reading)
+            reading['status'] = 'OK'
         except DeviceNotFound as err:
-            # response.append({'name': work_center, 'status': 'Not Found'})
-            response.append(
-                {
-                    'name': work_center,
-                    'reading': None,
-                    'reading_time': datetime.now(),
-                }
-            )
+            reading = {
+                'name': work_center,
+                'reading': None,
+                'reading_time': datetime.now(),
+                'status': 'Not Found',
+            }
+            logger.error(f'Device {work_center} not found in settings.py')
+        response.append(reading)
     logger.info(f"{response=}")
     return response
 
