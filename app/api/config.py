@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     receiver_url: HttpUrl
     receiver_token: str
     poller_active: bool = False
-    test_poller: bool = False
+    dummy: bool = False
 
     class Config:
         # env_file = '.env'

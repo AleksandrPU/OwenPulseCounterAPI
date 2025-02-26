@@ -3,7 +3,8 @@ from typing import Any, Union
 
 from serial import Serial
 
-from app.owen_counter.exeptions import (BCDValueError, ImproperlyConfiguredError,
+from app.owen_counter.exeptions import (BCDValueError,
+                                        ImproperlyConfiguredError,
                                         PacketDecodeError, PacketFooterError,
                                         PacketHeaderError, PacketLenError,
                                         TimeValueError)

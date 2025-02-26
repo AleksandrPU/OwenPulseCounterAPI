@@ -7,10 +7,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.config import settings
+from app.dummy.sender import DummyPcsPerMinSender
 from app.owen_poller.exeptions import DeviceNotFound
 from app.owen_poller.owen_poller import SensorsPoller
 from app.owen_poller.sender import PcsPerMinSender
-from app.owen_poller.test_sender import TestPcsPerMinSender
 
 logger = logging.getLogger(__name__)
 application = FastAPI()
@@ -25,8 +25,8 @@ application.add_middleware(
 
 poller = SensorsPoller()
 if settings.poller_active:
-    if settings.test_poller:
-        readings_sender = TestPcsPerMinSender(poller)
+    if settings.dummy:
+        readings_sender = DummyPcsPerMinSender(poller)
     else:
         readings_sender = PcsPerMinSender(poller)
 
@@ -52,7 +52,7 @@ async def get_some_sensor_readings(work_centers: str):
         try:
             reading = poller.get_sensor_readings(work_center)
             reading['status'] = 'OK'
-        except DeviceNotFound as err:
+        except DeviceNotFound:
             reading = {
                 'name': work_center,
                 'reading': None,

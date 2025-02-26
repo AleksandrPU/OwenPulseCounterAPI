@@ -1,7 +1,6 @@
 from typing import Any
 
-from app.owen_counter.owen_ci8 import OwenCI8
-from app.owen_counter.test_counter import TestCounter
+from app.dummy.counter import DummyCounter
 
 serial_settings: dict[str, Any] = {
     # 'port': '/dev/ttyUSB0',
@@ -41,7 +40,7 @@ sensors_settings: list[dict[str, Any]] = [
         'name': 'test1',
         'addr': 0,
         'addr_len': 0,
-        'parameter': TestCounter.TEST
+        'parameter': DummyCounter.TEST
     },
 ]
 

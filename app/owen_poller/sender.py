@@ -28,7 +28,8 @@ class PcsPerMinSender:
                 previous_reading: SensorReading = self.last_readings.get(
                     sensor.name)
                 if previous_reading is None or previous_reading.value is None:
-                    self.last_readings[sensor.name] = copy.copy(current_reading)
+                    self.last_readings[sensor.name] = copy.copy(
+                        current_reading)
                     continue
                 duration = current_reading.time - previous_reading.time
                 if duration.total_seconds() <= 0:
@@ -51,7 +52,8 @@ class PcsPerMinSender:
                     response = requests.post(
                         url=settings.receiver_url,
                         headers={
-                            'Authorization': f'Token {settings.receiver_token}'},
+                            'Authorization':
+                                f'Token {settings.receiver_token}'},
                         json=for_sent
                     )
                     logger.info(response.json())
