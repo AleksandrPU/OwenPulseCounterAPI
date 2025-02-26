@@ -1,16 +1,17 @@
 import asyncio
 import logging
 import random
+
 import requests
 from requests import JSONDecodeError, RequestException
 
-from app.api.config import settings, configure_logging
+from app.api.config import configure_logging, settings
 
 configure_logging(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class TestPcsPerMinSender:
+class DummyPcsPerMinSender:
 
     def __init__(self, poller):
         self.poller = poller
@@ -45,7 +46,8 @@ class TestPcsPerMinSender:
                     response = requests.post(
                         url=settings.receiver_url,
                         headers={
-                            'Authorization': f'Token {settings.receiver_token}'},
+                            'Authorization':
+                                f'Token {settings.receiver_token}'},
                         json=for_sent
                     )
                     logger.info(response.json())
