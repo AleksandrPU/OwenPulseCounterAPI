@@ -8,6 +8,7 @@ from typing import Any
 from serial import Serial
 
 from app import settings
+from app.api.common import SensorReading
 from app.api.config import configure_logging
 from app.dummy.counter import DummyCounter
 from app.dummy.poller import DummySensor
@@ -17,12 +18,6 @@ from .exeptions import DeviceNotFound
 
 configure_logging(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class SensorReading:
-    value: Any = None
-    time: datetime = datetime.now()
 
 
 @dataclass

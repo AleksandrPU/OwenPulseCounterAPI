@@ -5,8 +5,8 @@ from typing import Any
 
 from serial import Serial
 
+from app.api.common import SensorReading
 from app.dummy.counter import DummyCounter
-from app.owen_poller.owen_poller import SensorReading
 
 
 @dataclass
