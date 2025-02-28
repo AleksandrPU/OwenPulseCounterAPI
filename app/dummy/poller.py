@@ -1,6 +1,7 @@
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
+from random import randint
 from typing import Any
 
 from serial import Serial
@@ -16,9 +17,12 @@ class DummySensor:
     parameter_hash: bytes
     serial: Serial
     reading: SensorReading = dataclasses.field(default_factory=SensorReading)
+    total_count: int = 0
 
     def update(self) -> None:
-        pass
+        self.total_count += randint(1, 3)
+        self.reading.value = self.total_count
+        self.reading.time = datetime.now()
 
     def get(self) -> dict[str, Any]:
         return {
