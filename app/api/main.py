@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from datetime import datetime
 
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
@@ -47,20 +46,7 @@ async def root():
 async def get_some_sensor_readings(work_centers: str):
     work_centers = work_centers.split(',')
     logger.info(f"Getting readings for {work_centers}")
-    response = []
-    for work_center in work_centers:
-        try:
-            reading = poller.get_sensor_readings(work_center)
-            reading['status'] = 'OK'
-        except DeviceNotFound:
-            reading = {
-                'name': work_center,
-                'reading': None,
-                'reading_time': datetime.now(),
-                'status': 'Not Found',
-            }
-            logger.error(f'Device {work_center} not found in settings.py')
-        response.append(reading)
+    response = poller.get_list_readings(work_centers)
     logger.info(f"{response=}")
     return response
 

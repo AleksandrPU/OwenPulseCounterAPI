@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import dataclasses
 import logging
 from dataclasses import dataclass
@@ -70,6 +71,7 @@ class SensorsPoller:
                 parameter_hash=sensor_settings['parameter'],
                 serial=serial
             )
+        self.last_readings = {}
 
     async def poll(self):
         """
@@ -86,3 +88,44 @@ class SensorsPoller:
             return self.sensors[sensor_name].get()
         except KeyError:
             raise DeviceNotFound(sensor_name)
+
+    def get_list_readings(
+            self, work_centers: list[str]
+    ) -> list[dict[str, Any]]:
+        for_sent = []
+        for work_center in work_centers:
+            response = {
+                'sensor': work_center,
+                'value': None,
+                'measured_at': datetime.now(),
+                'status': 'Not Found'
+            }
+            if not (sensor := self.sensors.get(work_center)):
+                logger.error(f'Device {work_center} not found in settings.py')
+                for_sent.append(response)
+                continue
+            current_reading: SensorReading = sensor.reading
+            if current_reading.value is None:
+                response['status'] = 'Offline'
+                for_sent.append(response)
+                continue
+            previous_reading: SensorReading = self.last_readings.get(
+                sensor.name)
+            if previous_reading is None or previous_reading.value is None:
+                self.last_readings[sensor.name] = copy.copy(
+                    current_reading)
+                response['status'] = 'OK'
+                for_sent.append(response)
+                continue
+            duration = current_reading.time - previous_reading.time
+            if duration.total_seconds() <= 0:
+                continue
+            speed = ((current_reading.value - previous_reading.value)
+                     / duration.total_seconds()
+                     * 60)
+            response['value'] = speed
+            response['status'] = 'OK'
+            for_sent.append(response)
+            self.last_readings[sensor.name] = copy.copy(current_reading)
+        logger.debug(f'{for_sent=}')
+        return for_sent
