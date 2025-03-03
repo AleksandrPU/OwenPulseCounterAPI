@@ -1,52 +1,19 @@
 import random
-from typing import Any
 
 from serial import Serial
 
-from app.owen_counter.exeptions import ImproperlyConfiguredError
-
 
 class DummyCounter:
-    TEST: bytes = b'\x00'
-
-    PARAMS: dict[bytes, dict[str, Any]] = {
-        TEST: {
-            'response_len': 0,
-            'converter': None
-        },
-    }
-
-    __ADDR_ERR_MSG = (
-        'Неверный адрес устройства: {actual}. '
-        'Установите значение из диапазона: 0 - {max_addr}')
-    __ADDR_LEN_ERR_MSG = (
-        'Неверная длина адреса устройства: {actual}. '
-        'Установите одно из значений: {expected}.')
-
-    __current_status = None
-    __values = None
-    __index = 0
+    """
+    Фейковый счетчик для отладки.
+    """
 
     def __init__(self, addr: int, addr_len: int = 8):
         """
         :param addr: адрес счетчика СИ8,
         :param addr_len: длина адреса.
         """
-        # проверяем валидность addr_len
-        if addr_len != 0:
-            raise ImproperlyConfiguredError(
-                self.__ADDR_LEN_ERR_MSG.format(
-                    actual=addr_len,
-                    expected=0
-                )
-            )
-        self.addr_len = addr_len
-        if addr != 0:
-            raise ImproperlyConfiguredError(
-                self.__ADDR_ERR_MSG.format(actual=addr, max_addr=0)
-            )
-        self.addr = addr
-
+        self.__total_reading = 0
         work = [
             random.randint(150, 200) for _ in range(2 * random.randint(9, 10))]
         part_work = [
@@ -69,7 +36,12 @@ class DummyCounter:
         """
 
         value = self.__values[self.__index]
+
         self.__index += 1
         if self.__index >= len(self.__values):
             self.__index = 0
-        return value
+
+        if value is None:
+            return value
+        self.__total_reading += value
+        return self.__total_reading

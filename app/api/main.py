@@ -6,7 +6,6 @@ from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.config import settings
-from app.dummy.sender import DummyPcsPerMinSender
 from app.owen_poller.exeptions import DeviceNotFound
 from app.owen_poller.owen_poller import SensorsPoller
 from app.owen_poller.sender import PcsPerMinSender
@@ -24,16 +23,14 @@ application.add_middleware(
 
 poller = SensorsPoller()
 if settings.poller_active:
-    if settings.dummy:
-        readings_sender = DummyPcsPerMinSender(poller)
-    else:
-        readings_sender = PcsPerMinSender(poller)
+    readings_sender = PcsPerMinSender(poller)
 
 
 @application.on_event('startup')
 async def app_startup():
     asyncio.create_task(poller.poll())
     if settings.poller_active:
+        logger.info('Starting active poller...')
         asyncio.create_task(readings_sender.send_readings())
 
 
@@ -43,18 +40,18 @@ async def root():
 
 
 @application.get("/sensors/")
-async def get_some_sensor_readings(work_centers: str):
+async def get_list_sensor_readings(work_centers: str):
     work_centers = work_centers.split(',')
-    logger.info(f"Getting readings for {work_centers}")
+    logger.debug(f"Getting readings for {work_centers}")
     response = poller.get_list_readings(work_centers)
-    logger.info(f"{response=}")
+    logger.debug(f"{response=}")
     return response
 
 
 @application.get("/sensors/{name}")
 async def get_sensor_readings(name: str):
     try:
-        logger.info(f"Getting readings for {name}")
+        logger.debug(f"Getting readings for {name}")
         return poller.get_sensor_readings(name)
     except DeviceNotFound as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
