@@ -1,13 +1,18 @@
+import logging
 from datetime import timedelta
 from typing import Any, Union
 
 from serial import Serial
 
+from app.api.config import configure_logging
 from app.owen_counter.exeptions import (BCDValueError,
                                         ImproperlyConfiguredError,
                                         PacketDecodeError, PacketFooterError,
                                         PacketHeaderError, PacketLenError,
                                         TimeValueError)
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 class DataConverters:
@@ -139,17 +144,21 @@ class OwenCI8:
         :param data: Данные.
         :return: CRC.
         """
-        crc = 0
+        crc = 0x00
         for byte in data:
             for j in range(8):
                 if (byte ^ (crc >> 8)) & 0x80:
+                    # if byte >> 7 != crc >> 15:
                     crc <<= 1
                     crc ^= 0x8F57
+                    # crc = (crc & 0x7FFF) * 2
                 else:
                     crc <<= 1
+                    # crc = (crc & 0x7FFF) * 2
                 byte <<= 1
                 byte &= 0xff
                 crc &= 0xffff
+                # byte = (byte & 0x7f) * 2
         return crc.to_bytes(2, 'big')
 
     def get_command_packet(self, parameter_hash: bytes) -> bytearray:
@@ -168,8 +177,10 @@ class OwenCI8:
             )
         # адрес + hash параметра счетчика
         data: bytearray = bytearray(self.addr) + parameter_hash
+        logger.debug(f'before bit response {data=}')
         # устанавливаем бит запроса, размер блока данных = 0
         data[1] |= 0x10
+        logger.debug(f'after bit response {data=}')
         # добавляем CRC
         data += self.calc_owen_crc(data)
         return data
@@ -230,10 +241,14 @@ class OwenCI8:
         Поднимает исключение если пакет не валиден.
         """
         try:
+            logger.debug('---------------------')
+            logger.debug(f'{data=}')
             # проверяем CRC
             actual_crc = data[self.__OWEN_CRC_BYTES]
+            logger.debug(f'{actual_crc=}')
             calculated_crc = self.calc_owen_crc(
                 data[self.__OWEN_CRC_DATA_BYTES])
+            logger.debug(f'{calculated_crc=}')
             if actual_crc != calculated_crc:
                 raise PacketDecodeError(
                     packet=bytes(data),
@@ -283,9 +298,49 @@ class OwenCI8:
         )
         response_expected_len = self.PARAMS[parameter_hash]['response_len']
         ascii_response = serial_if.read(response_expected_len)
-        if len(ascii_response) != response_expected_len:
-            raise PacketLenError(packet=ascii_response)
+        logger.debug(f'{ascii_response=}')
+
+        # data: bytearray = bytearray() + b'\x0d' + b'\x04' + b'\xC1\x73' + b'\x00\x00\x00\x09'
+        data: bytearray = bytearray() + b'\r' + b'\x03' + b'\xC1\x73' + b'\x00\x00\x09'
+        data += self.calc_owen_crc(data)
+        ascii_response = self.bin_to_ascii(data)
+        logger.debug(f'fake {ascii_response=}')
+
+        # TODO убрать -> длина пакета переменная
+        # if len(ascii_response) != response_expected_len:
+        #     raise PacketLenError(packet=ascii_response)
         data = self.check_bin_packet(self.ascii_to_bin(ascii_response),
                                      parameter_hash)
+        logger.debug(f'{data=}')
+        logger.debug(f'{self.PARAMS[parameter_hash]["converter"](data=data)=}')
+
+        temp = bytearray() + b'\t\x04\xc1s\x00gr'
+        logger.debug(temp)
+        logger.debug(self.calc_owen_crc(temp))
+        ascii_packet = []
+        for byte in temp:
+            byte = int(byte)
+            h_nibble = ((byte & 0xF0) >> 4) + self.__OWEN_ASCII_LOWEST_CODE
+            l_nibble = (byte & 0x0F) + self.__OWEN_ASCII_LOWEST_CODE
+            ascii_packet.append(h_nibble)
+            ascii_packet.append(l_nibble)
+        s = ''.join(map(chr, ascii_packet))
+        logger.debug(f'{ascii_packet=}')
+        logger.debug(f'{s=}')
+        logger.debug(b'\x05\x04\xc1s\x03$')
+        logger.debug(self.calc_owen_crc(b'\x05\x04\xc1s\x03$'))
+        logger.debug(b'\x0f\x04\xc1s\x00\x12\x89')
+        logger.debug(self.calc_owen_crc(b'\x0f\x04\xc1s\x00\x12\x89'))
+        logger.debug(b'\x06\x04\xc1s\x01\x16')
+        logger.debug(self.calc_owen_crc(b'\x06\x04\xc1s\x01\x16'))
+
+        ggg = bytearray(b"\x11\x04\xc1s\x00\x95\x80\x18")
+        logger.debug(f'{len(ggg)=}')
+
+        b = bytearray(b'\x0F\x10\xC1\x73')
+        logger.debug(f'{b=}')
+        logger.debug(f'{self.calc_owen_crc(b)=}')
+
+        logger.debug(self.check_bin_packet(bytearray(b'\t\x04\xc1s\x00gr4\x1a'), self.DCNT))
 
         return self.PARAMS[parameter_hash]['converter'](data=data)

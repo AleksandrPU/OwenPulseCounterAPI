@@ -11,13 +11,11 @@ from serial import Serial
 from app import settings
 from app.api.common import SensorReading
 from app.api.config import configure_logging
-from app.dummy.counter import DummyCounter
-from app.dummy.poller import DummySensor
 from app.owen_counter.owen_ci8 import OwenCI8
 
 from .exeptions import DeviceNotFound
 
-configure_logging(level=logging.DEBUG)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -58,13 +56,8 @@ class SensorsPoller:
         self.sensors: dict[str, Sensor] = {}
         for sensor_settings in settings.sensors_settings:
             sensor_name = sensor_settings['name']
-            if sensor_settings['addr'] == 0:
-                type_sensor = DummySensor
-                device = DummyCounter
-            else:
-                type_sensor = Sensor
-                device = OwenCI8
-            self.sensors[sensor_name] = type_sensor(
+            device = sensor_settings['driver']
+            self.sensors[sensor_name] = Sensor(
                 name=sensor_name,
                 device=device(addr=sensor_settings['addr'],
                               addr_len=sensor_settings['addr_len']),
@@ -72,6 +65,7 @@ class SensorsPoller:
                 serial=serial
             )
         self.last_readings = {}
+        logger.error(f'{self.sensors=}')
 
     async def poll(self):
         """

@@ -8,7 +8,7 @@ from requests import JSONDecodeError, RequestException
 from app.api.config import configure_logging, settings
 from app.owen_poller.owen_poller import SensorReading
 
-configure_logging(level=logging.DEBUG)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +23,8 @@ class PcsPerMinSender:
             for_sent = []
             for sensor in self.poller.sensors.values():
                 current_reading: SensorReading = sensor.reading
+                logger.debug(
+                    f'Reading sensor {sensor.name}: {current_reading.value}')
                 if current_reading.value is None:
                     continue
                 previous_reading: SensorReading = self.last_readings.get(
@@ -54,7 +56,8 @@ class PcsPerMinSender:
                         headers={
                             'Authorization':
                                 f'Token {settings.receiver_token}'},
-                        json=for_sent
+                        json=for_sent,
+                        timeout=settings.poller_connection_timeout,
                     )
                     logger.info(response.json())
                 except (RequestException, JSONDecodeError) as err:
