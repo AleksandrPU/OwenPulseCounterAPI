@@ -92,7 +92,7 @@ class SensorsPoller:
                 'sensor': work_center,
                 'value': None,
                 'measured_at': datetime.now(),
-                'status': 'Not Found'
+                'status': 'NOT FOUND'
             }
             if not (sensor := self.sensors.get(work_center)):
                 logger.error(f'Device {work_center} not found in settings.py')
@@ -100,7 +100,7 @@ class SensorsPoller:
                 continue
             current_reading: SensorReading = sensor.reading
             if current_reading.value is None:
-                response['status'] = 'Offline'
+                response['status'] = 'OFFLINE'
                 for_sent.append(response)
                 continue
             previous_reading: SensorReading = self.last_readings.get(
