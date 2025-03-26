@@ -86,12 +86,18 @@ class SensorsPoller:
     def get_list_readings(
             self, work_centers: list[str]
     ) -> list[dict[str, Any]]:
+        """
+        Запрос данных по списку slug рабочих центров.
+        :param work_centers: Список slug рабочих центров.
+        :return: Список показаний датчиков.
+        """
         for_sent = []
+        measured_at = datetime.now()
         for work_center in work_centers:
             response = {
                 'sensor': work_center,
                 'value': None,
-                'measured_at': datetime.now(),
+                'measured_at': measured_at,
                 'status': 'NOT FOUND'
             }
             if not (sensor := self.sensors.get(work_center)):
