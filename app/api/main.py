@@ -1,13 +1,16 @@
 import asyncio
+import logging
 
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.config import settings
 from app.owen_poller.exeptions import DeviceNotFound
 from app.owen_poller.owen_poller import SensorsPoller
 from app.owen_poller.sender import PcsPerMinSender
 
+logger = logging.getLogger(__name__)
 application = FastAPI()
 
 application.add_middleware(
@@ -19,13 +22,16 @@ application.add_middleware(
 )
 
 poller = SensorsPoller()
-readings_sender = PcsPerMinSender(poller)
+if settings.poller_active:
+    readings_sender = PcsPerMinSender(poller)
 
 
 @application.on_event('startup')
 async def app_startup():
     asyncio.create_task(poller.poll())
-    asyncio.create_task(readings_sender.send_readings())
+    if settings.poller_active:
+        logger.info('Starting active poller...')
+        asyncio.create_task(readings_sender.send_readings())
 
 
 @application.get("/")
@@ -33,9 +39,19 @@ async def root():
     return {"message": "Owen Pulse Counter API"}
 
 
+@application.get("/sensors/")
+async def get_list_sensor_readings(work_centers: str):
+    work_centers = work_centers.split(',')
+    logger.debug(f"Getting readings for {work_centers}")
+    response = poller.get_list_readings(work_centers)
+    logger.debug(f"{response=}")
+    return response
+
+
 @application.get("/sensors/{name}")
 async def get_sensor_readings(name: str):
     try:
+        logger.debug(f"Getting readings for {name}")
         return poller.get_sensor_readings(name)
     except DeviceNotFound as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

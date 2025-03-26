@@ -1,12 +1,18 @@
+import logging
 from datetime import timedelta
 from typing import Any, Union
 
 from serial import Serial
 
-from app.owen_counter.exeptions import (BCDValueError, ImproperlyConfiguredError,
+from app.api.config import configure_logging
+from app.owen_counter.exeptions import (BCDValueError,
+                                        ImproperlyConfiguredError,
                                         PacketDecodeError, PacketFooterError,
                                         PacketHeaderError, PacketLenError,
                                         TimeValueError)
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 class DataConverters:
@@ -138,7 +144,7 @@ class OwenCI8:
         :param data: Данные.
         :return: CRC.
         """
-        crc = 0
+        crc = 0x00
         for byte in data:
             for j in range(8):
                 if (byte ^ (crc >> 8)) & 0x80:
@@ -282,9 +288,10 @@ class OwenCI8:
         )
         response_expected_len = self.PARAMS[parameter_hash]['response_len']
         ascii_response = serial_if.read(response_expected_len)
-        if len(ascii_response) != response_expected_len:
-            raise PacketLenError(packet=ascii_response)
+
         data = self.check_bin_packet(self.ascii_to_bin(ascii_response),
                                      parameter_hash)
+        if len(data) == 0:
+            raise PacketLenError(packet=ascii_response)
 
         return self.PARAMS[parameter_hash]['converter'](data=data)

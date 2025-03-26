@@ -1,9 +1,15 @@
 import asyncio
 import copy
+import logging
+
 import requests
 from requests import JSONDecodeError, RequestException
 
+from app.api.config import configure_logging, settings
 from app.owen_poller.owen_poller import SensorReading
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 class PcsPerMinSender:
@@ -17,12 +23,15 @@ class PcsPerMinSender:
             for_sent = []
             for sensor in self.poller.sensors.values():
                 current_reading: SensorReading = sensor.reading
+                logger.debug(
+                    f'Reading sensor {sensor.name}: {current_reading.value}')
                 if current_reading.value is None:
                     continue
                 previous_reading: SensorReading = self.last_readings.get(
                     sensor.name)
                 if previous_reading is None or previous_reading.value is None:
-                    self.last_readings[sensor.name] = copy.copy(current_reading)
+                    self.last_readings[sensor.name] = copy.copy(
+                        current_reading)
                     continue
                 duration = current_reading.time - previous_reading.time
                 if duration.total_seconds() <= 0:
@@ -38,18 +47,19 @@ class PcsPerMinSender:
                     }
                 )
                 self.last_readings[sensor.name] = copy.copy(current_reading)
-            try:
-                print('Отправка данных в PhyHub..')
-                print(for_sent)
-                response = requests.post(
-                    url='http://phyhub.polipak.local/api/v1/create_readings/',
-                    # url='http://127.0.0.1:8000/api/v1/create_readings/',
-                    headers={'Authorization': 'Token e441b27fb5a4a83e80e29d958fdf08f9b919448d'},
-                    # headers={'Authorization': 'Token 90386e054c5c229d4cbcfde73cfc81e6304f4e51'},
-                    json=for_sent
-                )
-                print(response.json())
-            except (RequestException, JSONDecodeError) as err:
-                print('Ошибка отправки')
-                print(err)
+            logger.debug(f'{for_sent=}')
+            if for_sent:
+                try:
+                    logger.info('Отправка данных в PhyHub..')
+                    response = requests.post(
+                        url=settings.receiver_url,
+                        headers={
+                            'Authorization':
+                                f'Token {settings.receiver_token}'},
+                        json=for_sent,
+                        timeout=settings.poller_connection_timeout,
+                    )
+                    logger.info(response.json())
+                except (RequestException, JSONDecodeError) as err:
+                    logger.error(f'Ошибка отправки:\n{err}')
             await asyncio.sleep(30)

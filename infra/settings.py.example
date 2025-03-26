@@ -36,6 +36,13 @@ sensors_settings: list[dict[str, Any]] = [
         'addr_len': 8,
         'parameter': OwenCI8.DCNT
     },
+    # пример объявления заглушки
+    {
+        'name': 'test1',
+        'addr': 0,
+        'addr_len': 0,
+        'parameter': DummyCounter.TEST
+    },
 ]
 
 POLL_DELAY = 0.5
