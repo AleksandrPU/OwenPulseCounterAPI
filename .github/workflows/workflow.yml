@@ -1,7 +1,10 @@
 name: OwenPulseCounterAPI workflow
-on: [ push ]
-jobs:
+on:
+  push:
+    branches:
+      - "master"
 
+jobs:
   build_and_push_backend_to_docker_hub:
     if: ${{ github.ref_name == 'master' }}
     runs-on: ubuntu-latest
