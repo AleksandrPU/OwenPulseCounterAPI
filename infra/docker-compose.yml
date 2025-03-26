@@ -1,7 +1,8 @@
-version: '3.8'
+name: counter
+
 services:
   app:
-    image: kraleksey/owen_counter_api:latest
+    image: aleksup/owen_counter_api:latest
     restart: unless-stopped
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
