@@ -65,7 +65,6 @@ class SensorsPoller:
                 serial=serial
             )
         self.last_readings = {}
-        logger.error(f'{self.sensors=}')
 
     async def poll(self):
         """
